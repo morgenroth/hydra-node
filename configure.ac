@@ -30,11 +30,13 @@ AC_PROG_LIBTOOL
 AC_LANG_CPLUSPLUS
 
 # check for ibrcommon library
-LOCAL_IBRCOMMON_VERSION=0.10
-LOCAL_CHECK_IBRCOMMON
-AC_SUBST(ibrcommon_CFLAGS)
-AC_SUBST(ibrcommon_LIBS)
-
+PKG_CHECK_MODULES([ibrcommon], [ibrcommon >= 0.10], [
+	AC_SUBST(ibrcommon_CFLAGS)
+	AC_SUBST(ibrcommon_LIBS)
+], [
+	echo "ibrcommon library not found!"
+	exit 1
+])
 
 dnl -----------------------------------------------
 dnl Generates Makefiles, configuration files and scripts
