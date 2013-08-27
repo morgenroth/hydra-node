@@ -14,6 +14,8 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <getopt.h>
+#include <unistd.h>
 
 void print_help()
 {
@@ -26,6 +28,7 @@ void print_help()
 	std::cout << " -p      tcp port for incoming control connections (default: 3486)" << std::endl;
 	std::cout << " -d      discovery port (default: 3232)" << std::endl;
 	std::cout << " -n      host identifier (default: hostname)" << std::endl;
+	std::cout << " -i      discovery interface (default: lo)" << std::endl;
 }
 
 int main(int argc, char** argv)
@@ -35,11 +38,12 @@ int main(int argc, char** argv)
 
 	int opt = 0;
 	std::string p_hostname = conf.getHostname();
+	std::string p_iface = "lo";
 	bool p_gps = false;
 	unsigned int _p_disco_port = 3232;
 	unsigned int _p_port = 3486;
 
-	while((opt = getopt(argc, argv, "hd:vgp:n:")) != -1)
+	while((opt = ::getopt(argc, argv, "hd:vgp:n:i:")) != -1)
 	{
 		switch (opt)
 		{
@@ -48,7 +52,7 @@ int main(int argc, char** argv)
 			return 0;
 
 		case 'd':
-			_p_disco_port = atoi(optarg);
+			_p_disco_port = ::atoi(optarg);
 			break;
 
 		case 'p':
@@ -61,6 +65,10 @@ int main(int argc, char** argv)
 
 		case 'n':
 			p_hostname = optarg;
+			break;
+
+		case 'i':
+			p_iface = optarg;
 			break;
 
 		default:
@@ -85,7 +93,8 @@ int main(int argc, char** argv)
 	{
 		try {
 			// run discovery module
-			DiscoverComponent disco(p_hostname, _p_disco_port);
+			const ibrcommon::vinterface iface(p_iface);
+			DiscoverComponent disco(p_hostname, _p_disco_port, iface);
 			disco.run();
 		} catch (const std::exception&) {
 			// error retry in 2 seconds

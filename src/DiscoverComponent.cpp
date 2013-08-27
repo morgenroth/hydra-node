@@ -6,6 +6,7 @@
  */
 
 #include "DiscoverComponent.h"
+#include <netinet/in.h>
 #include <sstream>
 
 DiscoverComponent::Message::Message(const DiscoverComponent::Message::MSG_TYPE type)
@@ -38,6 +39,8 @@ std::ostream& operator<<(std::ostream &stream, const DiscoverComponent::Message 
 			break;
 		}
 	}
+
+	return stream;
 }
 
 std::istream& operator>>(std::istream &stream, DiscoverComponent::Message &msg)
@@ -58,17 +61,22 @@ std::istream& operator>>(std::istream &stream, DiscoverComponent::Message &msg)
 			break;
 		}
 	}
+
+	return stream;
 }
 
-DiscoverComponent::DiscoverComponent(const std::string &hostname, unsigned int port)
- : _vsock(), _msock(_vsock.bind(port, SOCK_DGRAM)), _vaddress(ibrcommon::vaddress::VADDRESS_INET, "225.16.16.1"), _hostname(hostname)
+DiscoverComponent::DiscoverComponent(const std::string &hostname, unsigned int port, const ibrcommon::vinterface &iface)
+ : _vaddress("225.16.16.1", port), _hostname(hostname)
 {
-	_msock.joinGroup(_vaddress);
+	ibrcommon::multicastsocket *mcast = new ibrcommon::multicastsocket(port);
+	_vsock.add( mcast );
+	_vsock.up();
+	mcast->join(_vaddress, iface);
 }
 
 DiscoverComponent::~DiscoverComponent()
 {
-	_msock.leaveGroup(_vaddress);
+	_vsock.destroy();
 }
 
 void DiscoverComponent::run()
@@ -77,19 +85,18 @@ void DiscoverComponent::run()
 
 	while (true)
 	{
-		std::list<int> fds;
-		ibrcommon::select(_vsock, fds, NULL);
+		ibrcommon::socketset fds;
+		_vsock.select(&fds, NULL, NULL, NULL);
 
-		for (std::list<int>::const_iterator iter = fds.begin(); iter != fds.end(); iter++)
+		for (ibrcommon::socketset::const_iterator iter = fds.begin(); iter != fds.end(); iter++)
 		{
 			// socket to read
-			int s = (*iter);
+			ibrcommon::udpsocket &s = dynamic_cast<ibrcommon::udpsocket&>(**iter);
 
-			struct sockaddr_in clientAddress;
-			socklen_t clientAddressLength = sizeof(clientAddress);
+			ibrcommon::vaddress client_addr;
 
 			// data waiting
-			int len = recvfrom(s, data, 1500, MSG_WAITALL, (struct sockaddr *) &clientAddress, &clientAddressLength);
+			int len = s.recvfrom(data, 1500, MSG_WAITALL, client_addr);
 
 			std::stringstream ss; ss.write(data, len);
 
@@ -107,7 +114,7 @@ void DiscoverComponent::run()
 				std::stringstream ss; ss << reply;
 				std::string reply_data = ss.str();
 
-				int ret = sendto(s, reply_data.c_str(), reply_data.length(), 0, (struct sockaddr *) &clientAddress, clientAddressLength);
+				s.sendto(reply_data.c_str(), reply_data.length(), 0, client_addr);
 			}
 		}
 	}

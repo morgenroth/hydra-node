@@ -8,7 +8,7 @@
 #ifndef DISCOVERCOMPONENT_H_
 #define DISCOVERCOMPONENT_H_
 
-#include <ibrcommon/net/MulticastSocket.h>
+#include <ibrcommon/net/socket.h>
 #include <ibrcommon/net/vsocket.h>
 #include <ibrcommon/net/vaddress.h>
 #include <iostream>
@@ -16,7 +16,7 @@
 class DiscoverComponent
 {
 public:
-	DiscoverComponent(const std::string &hostname, unsigned int port = 3232);
+	DiscoverComponent(const std::string &hostname, unsigned int port, const ibrcommon::vinterface &iface);
 	virtual ~DiscoverComponent();
 
 	void run();
@@ -45,7 +45,6 @@ private:
 
 	ibrcommon::vsocket _vsock;
 	ibrcommon::vaddress _vaddress;
-	ibrcommon::MulticastSocket _msock;
 	const std::string _hostname;
 };
 

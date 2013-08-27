@@ -8,12 +8,12 @@
 #include "CommandServer.h"
 #include "HostControl.h"
 #include "FakeGPS.h"
-#include <ibrcommon/net/tcpstream.h>
 #include <ibrcommon/thread/MutexLock.h>
+#include <netinet/in.h>
 
 
-CommandServer::Connection::Connection(ibrcommon::tcpstream *stream, ibrcommon::Conditional &m, unsigned int &c)
- : _stream(stream), _active_connections_cond(m), _active_connections(c)
+CommandServer::Connection::Connection(ibrcommon::clientsocket *client, ibrcommon::Conditional &m, unsigned int &c)
+ : _stream(client), _active_connections_cond(m), _active_connections(c)
 {
 	ibrcommon::MutexLock l(_active_connections_cond);
 	_active_connections++;
@@ -22,28 +22,24 @@ CommandServer::Connection::Connection(ibrcommon::tcpstream *stream, ibrcommon::C
 
 CommandServer::Connection::~Connection()
 {
-	delete _stream;
-
 	ibrcommon::MutexLock l(_active_connections_cond);
 	_active_connections--;
 	_active_connections_cond.signal(true);
 }
 
-void CommandServer::Connection::setup()
+void CommandServer::Connection::setup() throw ()
 {
 	std::cout << "connection up" << std::endl;
 }
 
-void CommandServer::Connection::run()
+void CommandServer::Connection::run() throw ()
 {
-	_stream->exceptions(std::ios::badbit | std::ios::eofbit);
-
-	while (_stream->good())
+	while (_stream.good())
 	{
 		Message m;
 
 		// read a new message
-		(*_stream) >> m;
+		_stream >> m;
 
 		// received a new message
 		std::cout << "received new message " << m._type << std::endl;
@@ -74,10 +70,14 @@ void CommandServer::Connection::run()
 	}
 }
 
-void CommandServer::Connection::finally()
+void CommandServer::Connection::finally() throw ()
 {
-	_stream->close();
+	_stream.close();
 	std::cout << "connection down" << std::endl;
+}
+
+void CommandServer::Connection::__cancellation() throw ()
+{
 }
 
 CommandServer::Message::Message(const CommandServer::Message::MSG_TYPE type)
@@ -101,6 +101,8 @@ std::ostream& operator<<(std::ostream &stream, const CommandServer::Message &msg
 		default:
 			break;
 	}
+
+	return stream;
 }
 
 std::istream& operator>>(std::istream &stream, CommandServer::Message &msg)
@@ -142,40 +144,45 @@ std::istream& operator>>(std::istream &stream, CommandServer::Message &msg)
 		default:
 			break;
 	}
+
+	return stream;
 }
 
 CommandServer::CommandServer(unsigned int port)
- : _srv(), _running(true), _active_connections(0)
+ : _srv(port, 5), _running(true), _active_connections(0)
 {
-	_srv.bind(port);
 }
 
 CommandServer::~CommandServer()
 {
-	_srv.shutdown();
-	_srv.close();
-	interrupt();
-
 	// wait until all connections are closed
 	ibrcommon::MutexLock l(_active_connections_cond);
 	while (_active_connections > 0) _active_connections_cond.wait();
 }
 
-void CommandServer::setup()
+void CommandServer::setup() throw ()
 {
-	_srv.listen(5);
+	_srv.up();
 }
 
-void CommandServer::run()
+void CommandServer::run() throw ()
 {
 	while (_running)
 	{
-		ibrcommon::tcpstream *stream = _srv.accept();
-		CommandServer::Connection *conn = new CommandServer::Connection(stream, _active_connections_cond, _active_connections);
+		ibrcommon::vaddress client_addr;
+		ibrcommon::clientsocket *client = _srv.accept(client_addr);
+
+		CommandServer::Connection *conn = new CommandServer::Connection(client, _active_connections_cond, _active_connections);
 		conn->start();
 	}
 }
 
-void CommandServer::finally()
+void CommandServer::finally() throw ()
 {
+	_srv.close();
+}
+
+void CommandServer::__cancellation() throw ()
+{
+	_srv.down();
 }

@@ -9,7 +9,8 @@
 #define COMMANDSERVER_H_
 
 #include <ibrcommon/net/vinterface.h>
-#include <ibrcommon/net/tcpserver.h>
+#include <ibrcommon/net/socket.h>
+#include <ibrcommon/net/socketstream.h>
 #include <ibrcommon/thread/Thread.h>
 #include <ibrcommon/thread/Mutex.h>
 #include <sstream>
@@ -20,9 +21,11 @@ public:
 	CommandServer(unsigned int port = 3486);
 	virtual ~CommandServer();
 
-	void setup();
-	void run();
-	void finally();
+	void setup() throw ();
+	void run() throw ();
+	void finally() throw ();
+
+	void __cancellation() throw ();
 
 private:
 	class Message
@@ -46,15 +49,17 @@ private:
 	class Connection : public ibrcommon::DetachedThread
 	{
 	public:
-		Connection(ibrcommon::tcpstream *stream, ibrcommon::Conditional &m, unsigned int &c);
+		Connection(ibrcommon::clientsocket *sock, ibrcommon::Conditional &m, unsigned int &c);
 		virtual ~Connection();
 
-		void setup();
-		void run();
-		void finally();
+		void setup() throw ();
+		void run() throw ();
+		void finally() throw ();
+
+		void __cancellation() throw ();
 
 	private:
-		ibrcommon::tcpstream *_stream;
+		ibrcommon::socketstream _stream;
 
 		ibrcommon::Conditional &_active_connections_cond;
 		unsigned int &_active_connections;
@@ -68,7 +73,7 @@ private:
 	friend
 	std::istream& operator>>(std::istream&, Message &msg);
 
-	ibrcommon::tcpserver _srv;
+	ibrcommon::tcpserversocket _srv;
 	bool _running;
 
 	ibrcommon::Conditional _active_connections_cond;
