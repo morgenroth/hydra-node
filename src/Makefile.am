@@ -20,4 +20,6 @@ hnd_SOURCES = Main.cpp \
 		FakeGPS.h \
 		FakeGPS.cpp \
 		HostControl.h \
-		HostControl.cpp
+		HostControl.cpp \
+		ClockMonitor.h \
+		ClockMonitor.cpp

@@ -9,6 +9,7 @@
 #include "DiscoverComponent.h"
 #include "CommandServer.h"
 #include "FakeGPS.h"
+#include "ClockMonitor.h"
 
 #include <ibrcommon/net/vinterface.h>
 
@@ -85,6 +86,11 @@ int main(int argc, char** argv)
 	FakeGPS &gps = FakeGPS::getInstance();
 	if (!p_gps) gps.disable();
 
+	// create clock monitor instance
+	ClockMonitor &cm = ClockMonitor::getInstance();
+	cm.setReference("salvator.ibr.cs.tu-bs.de");
+	cm.start();
+
 	// listen on incoming tcp connections
 	CommandServer srv(_p_port);
 	srv.start();
@@ -99,7 +105,7 @@ int main(int argc, char** argv)
 		} catch (const std::exception&) {
 			// error retry in 2 seconds
 			std::cout << "can not listen on multicast socket" << std::endl;
-			::sleep(2);
+			ibrcommon::Thread::sleep(2000);
 		}
 	}
 }
