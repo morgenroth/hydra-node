@@ -9,6 +9,7 @@
 #include "ctrl/LevelPosition.h"
 #include "ctrl/LevelClock.h"
 #include "ctrl/LevelStats.h"
+#include "ctrl/LevelDtnd.h"
 #include "ctrl/CommandSystem.h"
 
 namespace ctrl {
@@ -17,6 +18,7 @@ namespace ctrl {
 		CommandSet::add(new LevelPosition(this));
 		CommandSet::add(new LevelClock(this));
 		CommandSet::add(new LevelStats(this));
+		CommandSet::add(new LevelDtnd(this));
 		CommandSet::add(new CommandSystem(this));
 	}
 

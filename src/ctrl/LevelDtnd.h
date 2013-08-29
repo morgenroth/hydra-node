@@ -16,6 +16,10 @@ namespace ctrl {
 	public:
 		LevelDtnd(CommandSet *parent);
 		virtual ~LevelDtnd();
+
+		virtual bool isCommand() const;
+
+		virtual void execute(const std::string &parameters, std::iostream &stream) const;
 	};
 
 } /* namespace ctrl */
