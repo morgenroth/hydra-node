@@ -64,8 +64,12 @@ void ClockMonitor::setup() throw () {
 
 void ClockMonitor::run() throw () {
 	while (_running) {
+		// measure clock offset and collect data
 		measure(_data);
-		std::cout << _data << std::endl;
+
+		//std::cout << _data << std::endl;
+
+		// wait for 30 seconds
 		for (int i = 0; i < 300; i++) {
 			Thread::sleep(100);
 		}

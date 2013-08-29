@@ -17,7 +17,7 @@ public:
 	virtual ~HostControl();
 
 	void shutdown() const;
-	void system(const std::string&) const;
+	void system(const std::string&, std::ostream&) const;
 
 private:
 	HostControl();

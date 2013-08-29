@@ -3,7 +3,7 @@ dnl Initialization macros.
 dnl --------------------------------
 
 
-AC_INIT(hnd, 0.1, morgenro@ibr.cs.tu-bs.de)
+AC_INIT(hnd, 0.2, morgenro@ibr.cs.tu-bs.de)
 AC_CONFIG_SRCDIR(src/Main.cpp)
 AM_INIT_AUTOMAKE
 LT_INIT

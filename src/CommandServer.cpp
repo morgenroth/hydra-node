@@ -5,9 +5,14 @@
  *      Author: morgenro
  */
 
+#include "config.h"
 #include "CommandServer.h"
 #include "HostControl.h"
 #include "FakeGPS.h"
+#include "Utils.h"
+#include "Configuration.h"
+#include "ctrl/LevelZero.h"
+
 #include <ibrcommon/thread/MutexLock.h>
 #include <netinet/in.h>
 
@@ -34,39 +39,53 @@ void CommandServer::Connection::setup() throw ()
 
 void CommandServer::Connection::run() throw ()
 {
+	Configuration &conf = Configuration::getInstance();
+
+	ctrl::CommandSet *entry = ctrl::LevelZero::getInstance();
+
+	// send 'welcome'
+	_stream << PACKAGE_STRING << " " << conf.getHostname() << " " << conf.getId() << std::endl;
+
+	// read and execute the given script
+	std::string buffer;
+
+	// read script lines
 	while (_stream.good())
 	{
-		Message m;
+		// get the next line
+		getline(_stream, buffer);
 
-		// read a new message
-		_stream >> m;
+		// search for '\r\n' and remove the '\r'
+		std::string::reverse_iterator iter = buffer.rbegin();
+		if ( (*iter) == '\r' ) buffer = buffer.substr(0, buffer.length() - 1);
 
-		// received a new message
-		std::cout << "received new message " << m._type << std::endl;
+		// received a new command
+		//std::cout << "[] " << buffer << std::endl;
 
-		// execute received command
-		switch (m._type)
-		{
-			case Message::MSG_GPS_POSITION:
-			{
-				FakeGPS::getInstance().setPosition(m._float_values[0],
-						m._float_values[1], m._float_values[2]);
+		// exit if EOF was received
+		if (buffer.find("quit") == 0) break;
+
+		ctrl::CommandSet *sub = entry;
+
+		do {
+			// split buffer into words
+			std::vector<std::string> words = Utils::tokenize(" ", buffer, 1);
+
+			// get next level for the given command
+			sub = sub->enter(words[0]);
+
+			if (sub == NULL) {
+				ctrl::CommandSet::result(_stream, 404, "COMMAND NOT FOUND");
+				break;
+			}
+			else if (sub->isCommand()) {
+				sub->execute(words[1], _stream);
 				break;
 			}
 
-			case Message::MSG_SCRIPT:
-			{
-				HostControl::getInstance().system(m._data.str());
-				break;
-			}
-
-			case Message::MSG_SHUTDOWN:
-				HostControl::getInstance().shutdown();
-				return;
-
-			default:
-				break;
-		}
+			// assign remaining part to the buffer
+			buffer = words[1];
+		} while (sub != NULL);
 	}
 }
 
@@ -78,74 +97,6 @@ void CommandServer::Connection::finally() throw ()
 
 void CommandServer::Connection::__cancellation() throw ()
 {
-}
-
-CommandServer::Message::Message(const CommandServer::Message::MSG_TYPE type)
- : _type(type)
-{
-	_float_values[0] = 0.0;
-	_float_values[1] = 0.0;
-	_float_values[2] = 0.0;
-}
-
-CommandServer::Message::~Message()
-{
-}
-
-std::ostream& operator<<(std::ostream &stream, const CommandServer::Message &msg)
-{
-	stream.write((char*)&msg._type, 1);
-
-	switch (msg._type)
-	{
-		default:
-			break;
-	}
-
-	return stream;
-}
-
-std::istream& operator>>(std::istream &stream, CommandServer::Message &msg)
-{
-	char type = 0;
-	stream.read(&type, 1);
-	msg._type = (CommandServer::Message::MSG_TYPE)type;
-	msg._data.str("");
-	msg._float_values[0] = 0.0;
-	msg._float_values[1] = 0.0;
-	msg._float_values[2] = 0.0;
-
-	switch (msg._type)
-	{
-		case CommandServer::Message::MSG_GPS_POSITION:
-		{
-			char buf[4];
-
-			for (int i = 0; i < 3; i++)
-			{
-				stream.read((char*)&buf, 4);
-				msg._float_values[i] = ntohl((float&)buf);
-			}
-			break;
-		}
-
-		case CommandServer::Message::MSG_SCRIPT:
-		{
-			char buf[4];
-			stream.read((char*)&buf, 4);
-			uint32_t len = ntohl((uint32_t&)buf);
-
-			char script_buf[len];
-			stream.read((char*)&script_buf, len);
-			msg._data.write((char*)&script_buf, len);
-			break;
-		}
-
-		default:
-			break;
-	}
-
-	return stream;
 }
 
 CommandServer::CommandServer(unsigned int port)

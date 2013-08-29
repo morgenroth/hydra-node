@@ -35,7 +35,7 @@ void print_help()
 int main(int argc, char** argv)
 {
 	// get a configuration object
-	Configuration conf;
+	Configuration &conf = Configuration::getInstance();
 
 	int opt = 0;
 	std::string p_hostname = conf.getHostname();
@@ -82,6 +82,10 @@ int main(int argc, char** argv)
 	std::cout << "startup of hydra node daemon" << std::endl;
 	std::cout << "hostname: " << p_hostname << std::endl;
 
+	// listen on interface
+	const ibrcommon::vinterface iface(p_iface);
+	conf.setInterface(iface);
+
 	// create a fake gps
 	FakeGPS &gps = FakeGPS::getInstance();
 	if (!p_gps) gps.disable();
@@ -99,7 +103,6 @@ int main(int argc, char** argv)
 	{
 		try {
 			// run discovery module
-			const ibrcommon::vinterface iface(p_iface);
 			DiscoverComponent disco(p_hostname, _p_disco_port, iface);
 			disco.run();
 		} catch (const std::exception&) {

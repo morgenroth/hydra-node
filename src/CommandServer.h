@@ -28,24 +28,6 @@ public:
 	void __cancellation() throw ();
 
 private:
-	class Message
-	{
-	public:
-		enum MSG_TYPE
-		{
-			MSG_UNKNOWN = 0,
-			MSG_SCRIPT = 1,
-			MSG_GPS_POSITION = 2,
-			MSG_SHUTDOWN = 3
-		} _type;
-
-		Message(const MSG_TYPE type = MSG_UNKNOWN);
-		virtual ~Message();
-
-		float _float_values[3];
-		std::stringstream _data;
-	};
-
 	class Connection : public ibrcommon::DetachedThread
 	{
 	public:
@@ -66,12 +48,6 @@ private:
 	};
 
 	friend class Connection;
-
-	friend
-	std::ostream& operator<<(std::ostream&, const Message &msg);
-
-	friend
-	std::istream& operator>>(std::istream&, Message &msg);
 
 	ibrcommon::tcpserversocket _srv;
 	bool _running;

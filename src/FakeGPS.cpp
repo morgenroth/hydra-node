@@ -31,6 +31,14 @@ FakeGPS::GPS_STATE FakeGPS::getState() const
 void FakeGPS::disable()
 {
 	_state = GPS_STATE_DISABLED;
+	_lon = 0.0;
+	_lat = 0.0;
+	_alt = 0.0;
+}
+
+void FakeGPS::setState(GPS_STATE state)
+{
+	_state = state;
 }
 
 void FakeGPS::getPosition(float &lon, float &lat) const
@@ -53,8 +61,6 @@ void FakeGPS::getPosition(float &lon, float &lat, float &alt) const
 void FakeGPS::setPosition(const float &lon, const float &lat, const float &alt)
 {
 	if (_state == GPS_STATE_DISABLED) return;
-
-	std::cout << "GPS: " << lon << ", " << lat << ", " << alt << std::endl;
 
 	_state = GPS_STATE_GOT_FIX;
 	_lon = lon;

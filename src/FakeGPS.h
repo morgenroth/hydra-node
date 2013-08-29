@@ -23,6 +23,8 @@ public:
 
 	GPS_STATE getState() const;
 
+	void setState(GPS_STATE state);
+
 	void disable();
 
 	void getPosition(float &lon, float &lat) const;

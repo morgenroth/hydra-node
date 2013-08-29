@@ -6,6 +6,7 @@
  */
 
 #include "HostControl.h"
+#include <ibrcommon/appstreambuf.h>
 #include <iostream>
 #include <cstdlib>
 
@@ -34,12 +35,14 @@ void HostControl::shutdown() const
 	}
 }
 
-void HostControl::system(const std::string &cmd) const
+void HostControl::system(const std::string &cmd, std::ostream &output) const
 {
 	std::cout << "system call: " << cmd << std::endl;
 
 	if (!_harmless)
 	{
-		int ret = ::system(cmd.c_str());
+		ibrcommon::appstreambuf app(cmd, ibrcommon::appstreambuf::MODE_READ);
+		std::iostream stream(&app);
+		output << stream.rdbuf();
 	}
 }
