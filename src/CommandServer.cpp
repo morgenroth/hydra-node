@@ -71,6 +71,12 @@ void CommandServer::Connection::run() throw ()
 			// split buffer into words
 			std::vector<std::string> words = Utils::tokenize(" ", buffer, 1);
 
+			// abort if there are no more words
+			if (words.size() <= 0) {
+				ctrl::CommandSet::result(_stream, 404, "COMMAND NOT FOUND");
+				break;
+			}
+
 			// get next level for the given command
 			sub = sub->enter(words[0]);
 
