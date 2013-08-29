@@ -73,13 +73,13 @@ namespace ctrl {
 			// close the script file
 			tmpout.close();
 
-			result(stream, 212, "LISTING");
+			result_listing(stream);
 
 			// execute script
 			HostControl::getInstance().system(shell + " " + tmpfile.getPath(), stream);
 
 			// send ok
-			result_ok(stream);
+			result_done(stream);
 
 			// remove temporary file
 			tmpfile.remove();
@@ -94,13 +94,13 @@ namespace ctrl {
 		}
 		else
 		{
-			result(stream, 212, "LISTING");
+			result_listing(stream);
 
 			// execute command in parameters
 			HostControl::getInstance().system(parameters, stream);
 
 			// send ok
-			result_ok(stream);
+			result_done(stream);
 		}
 	}
 } /* namespace ctrl */

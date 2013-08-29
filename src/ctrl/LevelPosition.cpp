@@ -39,9 +39,9 @@ namespace ctrl {
 			result_ok(stream);
 		}
 		else if (keyword.find("state") == 0) {
-			result(stream, 211, "VALUE");
+			result_value(stream);
 			stream << FakeGPS::getInstance().getState() << std::endl;
-			result_ok(stream);
+			result_done(stream);
 		}
 		else if (keyword.find("get") == 0) {
 			float x = 0.0f;
@@ -50,14 +50,14 @@ namespace ctrl {
 
 			FakeGPS::getInstance().getPosition(x, y, z);
 
-			result(stream, 212, "LISTING");
+			result_listing(stream);
 
 			stream << "state: " << FakeGPS::getInstance().getState() << std::endl;
 			stream << "x: " << x << std::endl;
 			stream << "y: " << y << std::endl;
 			stream << "z: " << z << std::endl;
 
-			result_ok(stream);
+			result_done(stream);
 		}
 		else if (keyword.find("set") == 0) {
 			float x = 0.0f;
@@ -68,6 +68,9 @@ namespace ctrl {
 
 			FakeGPS::getInstance().setPosition(x, y, z);
 			result_ok(stream);
+		}
+		else {
+			result_fail(stream);
 		}
 	}
 

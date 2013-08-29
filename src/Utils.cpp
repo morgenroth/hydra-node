@@ -6,6 +6,9 @@
  */
 
 #include "Utils.h"
+#include <iostream>
+#include <fstream>
+#include <sstream>
 
 Utils::Utils() {
 }
@@ -79,4 +82,16 @@ std::vector<std::string> Utils::tokenize(const std::string &token, const std::st
 	}
 
 	return l;
+}
+
+std::string Utils::readSysFile(const std::string &filename)
+{
+	std::ifstream sysfile_stream(filename.c_str());
+	std::stringstream ss;
+	ss << sysfile_stream.rdbuf();
+
+	std::string buffer = ss.str();
+	buffer.erase(buffer.begin() + (buffer.length() - 1));
+
+	return buffer;
 }

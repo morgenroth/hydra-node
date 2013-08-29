@@ -16,6 +16,8 @@ public:
 	Utils();
 	virtual ~Utils();
 
+	static std::string readSysFile(const std::string &filename);
+
 	static void rtrim(std::string &str);
 	static void ltrim(std::string &str);
 	static void trim(std::string &str);

@@ -6,10 +6,9 @@
  */
 
 #include "Configuration.h"
+#include "Utils.h"
 #include <unistd.h>
-#include <iostream>
-#include <fstream>
-#include <sstream>
+
 
 Configuration::Configuration()
 {
@@ -49,14 +48,5 @@ const std::string Configuration::getHostname() const
 
 const std::string Configuration::getId() const
 {
-	const std::string dev_addr_path = "/sys/class/net/" + _iface.toString() + "/address";
-
-	std::ifstream dev_addr(dev_addr_path.c_str());
-	std::stringstream ss;
-	ss << dev_addr.rdbuf();
-
-	std::string buffer = ss.str();
-	buffer.erase(buffer.begin() + (buffer.length() - 1));
-
-	return buffer;
+	return Utils::readSysFile("/sys/class/net/" + _iface.toString() + "/address");
 }

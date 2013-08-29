@@ -69,6 +69,21 @@ namespace ctrl {
 		_commands.insert(cset);
 	}
 
+	void CommandSet::result_done(std::iostream &stream)
+	{
+		stream << "." << std::endl;
+	}
+
+	void CommandSet::result_value(std::iostream &stream)
+	{
+		result(stream, 211, "VALUE");
+	}
+
+	void CommandSet::result_listing(std::iostream &stream)
+	{
+		result(stream, 212, "LISTING");
+	}
+
 	void CommandSet::result_fail(std::iostream &stream)
 	{
 		result(stream, 300, "FAIL");

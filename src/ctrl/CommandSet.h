@@ -47,6 +47,9 @@ namespace ctrl {
 
 		const std::string& getCode() const;
 
+		static void result_done(std::iostream &stream);
+		static void result_value(std::iostream &stream);
+		static void result_listing(std::iostream &stream);
 		static void result_fail(std::iostream &stream);
 		static void result_ok(std::iostream &stream);
 		static void result(std::iostream &stream, int code, const std::string &msg);
