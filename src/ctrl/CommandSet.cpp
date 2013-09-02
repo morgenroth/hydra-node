@@ -71,7 +71,7 @@ namespace ctrl {
 
 	void CommandSet::result_done(std::iostream &stream)
 	{
-		stream << "." << std::endl;
+		stream << "\n.\n" << std::flush;
 	}
 
 	void CommandSet::result_value(std::iostream &stream)
