@@ -50,6 +50,18 @@ namespace ctrl {
 
 			result_ok(stream);
 		}
+		else if (keyword.find("timeofday") == 0) {
+			struct timezone tz;
+			struct timeval ts;
+			::gettimeofday(&ts, &tz);
+
+			ss >> ts.tv_sec;
+			ss >> ts.tv_usec;
+
+			::settimeofday(&ts, &tz);
+
+			result_ok(stream);
+		}
 		else {
 			result_fail(stream);
 		}
