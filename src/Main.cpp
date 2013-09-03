@@ -30,6 +30,7 @@ void print_help()
 	std::cout << " -d      discovery port (default: 3232)" << std::endl;
 	std::cout << " -n      host identifier (default: hostname)" << std::endl;
 	std::cout << " -i      discovery interface (default: lo)" << std::endl;
+	std::cout << " -t      ntp server for clock measurements" << std::endl;
 }
 
 int main(int argc, char** argv)
@@ -40,11 +41,12 @@ int main(int argc, char** argv)
 	int opt = 0;
 	std::string p_hostname = conf.getHostname();
 	std::string p_iface = "lo";
+	std::string p_ntpserver = "127.0.0.1";
 	bool p_gps = false;
 	unsigned int _p_disco_port = 3232;
 	unsigned int _p_port = 3486;
 
-	while((opt = ::getopt(argc, argv, "hd:vgp:n:i:")) != -1)
+	while((opt = ::getopt(argc, argv, "hd:vgp:n:i:t:")) != -1)
 	{
 		switch (opt)
 		{
@@ -72,6 +74,10 @@ int main(int argc, char** argv)
 			p_iface = optarg;
 			break;
 
+		case 't':
+			p_ntpserver = optarg;
+			break;
+
 		default:
 			std::cout << "unknown command" << std::endl;
 			return -1;
@@ -92,7 +98,7 @@ int main(int argc, char** argv)
 
 	// create clock monitor instance
 	ClockMonitor &cm = ClockMonitor::getInstance();
-	cm.setReference("salvator.ibr.cs.tu-bs.de");
+	cm.setReference(p_ntpserver);
 	cm.start();
 
 	// listen on incoming tcp connections
